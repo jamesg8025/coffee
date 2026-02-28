@@ -65,7 +65,7 @@ _Setup instructions will be added upon Phase 1 completion._
 Prerequisites: Docker, Docker Compose, Python 3.12, Node.js 18+
 
 ```bash
-git clone https://github.com/your-username/coffee-connoisseur-platform.git
+git clone https://github.com/jamesg8025/coffee.git
 cd coffee-connoisseur-platform
 # setup instructions coming soon
 ```
