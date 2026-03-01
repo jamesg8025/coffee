@@ -1,0 +1,38 @@
+# ---- Secrets (never commit these) ----
+.env
+*.pem
+*.key
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# ---- Node (frontend) ----
+node_modules/
+.next/
+out/
+npm-debug.log*
+yarn-error.log*
+
+# ---- Docker ----
+*.dockerignore
+
+# ---- macOS ----
+.DS_Store
+
+# ---- IDEs ----
+.idea/
+.vscode/
+*.swp

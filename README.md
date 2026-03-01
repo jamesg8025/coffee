@@ -60,22 +60,29 @@ Every push runs through four security gates before any code reaches production:
 
 ## Local Development
 
-_Setup instructions will be added upon Phase 1 completion._
-
-Prerequisites: Docker, Docker Compose, Python 3.12, Node.js 18+
+Prerequisites: Docker, Docker Compose
 
 ```bash
-git clone https://github.com/jamesg8025/coffee.git
-cd coffee-connoisseur-platform
-# setup instructions coming soon
+# 1. Copy environment config
+cp .env.example .env
+
+# 2. Start all services (Postgres, Redis, auth, coffee, security)
+docker compose up --build
+
+# Services available at:
+#   auth-service     → http://localhost:8001  (docs: /docs)
+#   coffee-service   → http://localhost:8002  (docs: /docs)
+#   security-service → http://localhost:8003  (docs: /docs)
 ```
+
+The auth-service entrypoint automatically runs `alembic upgrade head` on startup, creating all database tables.
 
 ---
 
 ## Project Roadmap
 
 - [x] SRD v3.0 — architecture and requirements defined
-- [ ] Phase 1 — monorepo structure, Docker Compose, Alembic setup
+- [x] Phase 1 — monorepo structure, Docker Compose, Alembic setup
 - [ ] Phase 2 — auth-service with JWT, refresh token rotation, TOTP MFA
 - [ ] Phase 3 — coffee-service with catalog, collections, AI recommendations
 - [ ] Phase 4 — security-service with rate limiting and automated scanning

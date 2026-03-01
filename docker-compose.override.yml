@@ -1,0 +1,16 @@
+# Development overrides — hot reload + mounted source volumes
+services:
+  auth-service:
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - ./auth-service:/app
+
+  coffee-service:
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - ./coffee-service:/app
+
+  security-service:
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - ./security-service:/app

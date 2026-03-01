@@ -1,0 +1,7 @@
+[bandit]
+# Exclude test directories — test code intentionally exercises edge cases
+exclude_dirs = tests,alembic
+
+# Skip B101 (assert_used) — asserts are intentional in tests
+# Skip B104 (hardcoded_bind_all_interfaces) — 0.0.0.0 is correct inside containers
+skips = B101,B104
