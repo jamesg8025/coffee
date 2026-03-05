@@ -1,0 +1,51 @@
+# .pre-commit-config.yaml
+#
+# Runs automatically before every `git commit`.
+# Install once: pip install pre-commit && pre-commit install
+#
+# Hooks included:
+#   bandit  — static security analysis (HIGH-severity findings block commit)
+#   ruff    — fast Python linter + formatter (replaces flake8/black/isort)
+#   general — trailing whitespace, YAML validity, merge conflict markers
+
+repos:
+  # ---------------------------------------------------------------------------
+  # Bandit — Python SAST (static application security testing)
+  #
+  # Interview talking point: "Bandit catches common Python security mistakes at
+  # commit time — things like hardcoded passwords, use of dangerous functions
+  # (eval, pickle), and SQL injection patterns.  Running it in pre-commit means
+  # security issues are caught before they ever reach the repo."
+  # ---------------------------------------------------------------------------
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.9
+    hooks:
+      - id: bandit
+        name: bandit (auth-service)
+        args: ["--configfile", ".bandit", "--severity-level", "high"]
+        files: ^auth-service/app/.*\.py$
+
+  # ---------------------------------------------------------------------------
+  # Ruff — extremely fast Python linter (Rust-based)
+  # Replaces flake8, isort, and parts of pylint in one tool.
+  # ---------------------------------------------------------------------------
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.5.7
+    hooks:
+      - id: ruff
+        args: ["--fix"]
+        files: ^(auth-service|coffee-service|security-service)/.*\.py$
+      - id: ruff-format
+        files: ^(auth-service|coffee-service|security-service)/.*\.py$
+
+  # ---------------------------------------------------------------------------
+  # General housekeeping
+  # ---------------------------------------------------------------------------
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-merge-conflict
+      - id: detect-private-key    # blocks accidental commit of RSA/EC private keys

@@ -1,6 +1,6 @@
 import enum
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, String, text
 from sqlalchemy.dialects.postgresql import UUID
@@ -46,7 +46,7 @@ class User(Base):
         DateTime(timezone=True),
         nullable=False,
         server_default=text("now()"),
-        onupdate=datetime.utcnow,
+        onupdate=lambda: datetime.now(timezone.utc),
     )
 
     refresh_tokens: Mapped[list["RefreshToken"]] = relationship(
