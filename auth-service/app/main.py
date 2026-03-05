@@ -2,18 +2,27 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from redis.asyncio import Redis
 
 from app.config import get_settings
+from app.middleware import LoginRateLimitMiddleware
 from app.routers import auth, mfa, users
 from app.secrets import load_secrets
 
 settings = get_settings()
 
+_redis: Redis | None = None
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    global _redis
     load_secrets()
+    _redis = Redis.from_url(settings.redis_url, decode_responses=True)
+    await _redis.ping()
     yield
+    if _redis:
+        await _redis.aclose()
 
 
 app = FastAPI(
@@ -32,6 +41,16 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+)
+
+# Rate limiting middleware — runs before every request.
+# Blocks IPs that have exceeded the login failure threshold.
+# The _redis client is initialised in lifespan above.
+# We pass a lambda so the middleware always gets the live client object.
+app.add_middleware(
+    LoginRateLimitMiddleware,
+    get_redis=lambda: _redis,
+    settings=settings,
 )
 
 

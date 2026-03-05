@@ -21,6 +21,14 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 15
     refresh_token_expire_days: int = 7
 
+    # Redis
+    redis_url: str = "redis://localhost:6379/0"
+
+    # Rate limiting — shared with security-service (same Redis keys)
+    rate_limit_max_failures: int = 5
+    rate_limit_window_seconds: int = 60
+    rate_limit_block_seconds: int = 900  # 15 min initial block; doubles each time
+
     # CORS — comma-separated string; split at usage point to avoid pydantic-settings
     # JSON-decoding list fields before validators can run
     cors_origins: str = "http://localhost:3000"

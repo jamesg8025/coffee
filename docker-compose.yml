@@ -76,6 +76,35 @@ services:
       redis:
         condition: service_healthy
 
+  celery-worker:
+    build:
+      context: ./security-service
+      dockerfile: Dockerfile
+    command: celery -A app.celery_app worker --loglevel=info
+    env_file: .env
+    environment:
+      - ENVIRONMENT=dev
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/coffee
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  celery-beat:
+    build:
+      context: ./security-service
+      dockerfile: Dockerfile
+    command: celery -A app.celery_app beat --loglevel=info
+    env_file: .env
+    environment:
+      - ENVIRONMENT=dev
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/coffee
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - celery-worker
+
 volumes:
   postgres_data:
   redis_data:

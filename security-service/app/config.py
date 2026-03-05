@@ -17,6 +17,10 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6379/0"
     auth_service_url: str = "http://localhost:8001"
 
+    # JWT — must match auth-service values
+    jwt_secret: str = "change_me_in_production"
+    jwt_algorithm: str = "HS256"
+
     # Rate limiting thresholds
     rate_limit_max_failures: int = 5
     rate_limit_window_seconds: int = 60

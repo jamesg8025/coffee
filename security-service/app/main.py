@@ -4,13 +4,19 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
+from app.redis_client import close_redis, init_redis
+from app.routers import rate_limit, scans
+from app.secrets import load_secrets
 
 settings = get_settings()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    load_secrets()
+    await init_redis()
     yield
+    await close_redis()
 
 
 app = FastAPI(
@@ -34,7 +40,5 @@ async def health():
     return {"status": "healthy", "service": "security-service"}
 
 
-# Routers mounted in Phase 4:
-# from app.routers import rate_limit, scans
-# app.include_router(rate_limit.router, prefix="/rate-limit", tags=["rate-limit"])
-# app.include_router(scans.router, prefix="/security", tags=["security"])
+app.include_router(rate_limit.router, prefix="/blocked-ips", tags=["rate-limit"])
+app.include_router(scans.router, prefix="/security/scan-history", tags=["scans"])

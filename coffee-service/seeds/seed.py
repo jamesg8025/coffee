@@ -14,10 +14,23 @@ import sys
 # Allow running from the project root
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from sqlalchemy import select
+import uuid
+
+from sqlalchemy import String, select
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
+from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import AsyncSessionLocal
+from app.models.base import Base
 from app.models.coffee import Coffee, RoastLevel
+
+
+# Stub so SQLAlchemy can resolve ForeignKey('users.id') without importing auth-service.
+class _UserStub(Base):
+    __tablename__ = "users"
+    __table_args__ = {"extend_existing": True}
+    id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True)
+    email: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, default="")
 
 COFFEES = [
     {

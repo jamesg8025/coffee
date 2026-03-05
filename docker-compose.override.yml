@@ -14,3 +14,11 @@ services:
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     volumes:
       - ./security-service:/app
+
+  celery-worker:
+    volumes:
+      - ./security-service:/app
+
+  celery-beat:
+    volumes:
+      - ./security-service:/app
