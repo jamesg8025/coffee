@@ -35,6 +35,7 @@ services:
     environment:
       - ENVIRONMENT=dev
       - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/coffee
+      - REDIS_URL=redis://redis:6379/0
     ports:
       - "8001:8000"
     depends_on:

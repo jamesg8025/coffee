@@ -1,7 +1,14 @@
+# ---- Personal / local-only files ----
+TALKING_POINTS.md
+
 # ---- Secrets (never commit these) ----
 .env
 *.pem
 *.key
+
+# ---- Celery runtime state ----
+celerybeat-schedule
+celerybeat.pid
 
 # ---- Python ----
 __pycache__/
