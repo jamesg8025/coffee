@@ -1,6 +1,6 @@
 import enum
 import uuid
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 
 from sqlalchemy import Boolean, Date, DateTime, Enum, ForeignKey, Numeric, String, Text, text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
@@ -53,7 +53,7 @@ class Coffee(Base):
         DateTime(timezone=True),
         nullable=False,
         server_default=text("now()"),
-        onupdate=datetime.utcnow,
+        onupdate=lambda: datetime.now(timezone.utc),
     )
 
     collections: Mapped[list["Collection"]] = relationship(
@@ -90,7 +90,8 @@ class Collection(Base):
     )
     purchase_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     status: Mapped[CollectionStatus] = mapped_column(
-        Enum(CollectionStatus, name="collectionstatus", create_type=False),
+        Enum(CollectionStatus, name="collectionstatus", create_type=False,
+             values_callable=lambda x: [e.value for e in x]),
         nullable=False,
         default=CollectionStatus.ACTIVE,
         server_default="active",
@@ -102,7 +103,7 @@ class Collection(Base):
         DateTime(timezone=True),
         nullable=False,
         server_default=text("now()"),
-        onupdate=datetime.utcnow,
+        onupdate=lambda: datetime.now(timezone.utc),
     )
 
     coffee: Mapped["Coffee"] = relationship("Coffee", back_populates="collections")
@@ -142,7 +143,7 @@ class TastingNote(Base):
         DateTime(timezone=True),
         nullable=False,
         server_default=text("now()"),
-        onupdate=datetime.utcnow,
+        onupdate=lambda: datetime.now(timezone.utc),
     )
 
     coffee: Mapped["Coffee"] = relationship("Coffee", back_populates="tasting_notes")

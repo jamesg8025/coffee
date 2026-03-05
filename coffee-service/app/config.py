@@ -16,6 +16,10 @@ class Settings(BaseSettings):
 
     auth_service_url: str = "http://localhost:8001"
 
+    # JWT — must match the values in auth-service so tokens can be validated locally
+    jwt_secret: str = "change_me_in_production"
+    jwt_algorithm: str = "HS256"
+
     # OpenAI — fetched from Secrets Manager in production
     openai_api_key: str = ""
     ai_recommendations_per_user_per_day: int = 10
