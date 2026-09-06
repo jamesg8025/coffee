@@ -41,9 +41,7 @@ async def create_coffee(
     return coffee
 
 
-async def update_coffee(
-    db: AsyncSession, coffee: Coffee, data: CoffeeUpdate
-) -> Coffee:
+async def update_coffee(db: AsyncSession, coffee: Coffee, data: CoffeeUpdate) -> Coffee:
     for field, value in data.model_dump(exclude_unset=True).items():
         setattr(coffee, field, value)
     await db.flush()

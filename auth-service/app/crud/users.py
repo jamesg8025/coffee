@@ -22,6 +22,7 @@ from app.security.tokens import generate_refresh_token, hash_refresh_token
 # Users
 # ---------------------------------------------------------------------------
 
+
 async def create_user(db: AsyncSession, data: UserCreate) -> User | None:
     """
     Create a new user. Returns None if the email is already registered.
@@ -42,22 +43,19 @@ async def create_user(db: AsyncSession, data: UserCreate) -> User | None:
 
 
 async def get_user_by_email(db: AsyncSession, email: str) -> User | None:
-    result = await db.execute(
-        select(User).where(User.email == email.lower())
-    )
+    result = await db.execute(select(User).where(User.email == email.lower()))
     return result.scalar_one_or_none()
 
 
 async def get_user_by_id(db: AsyncSession, user_id: uuid.UUID) -> User | None:
-    result = await db.execute(
-        select(User).where(User.id == user_id)
-    )
+    result = await db.execute(select(User).where(User.id == user_id))
     return result.scalar_one_or_none()
 
 
 # ---------------------------------------------------------------------------
 # Refresh tokens
 # ---------------------------------------------------------------------------
+
 
 async def issue_refresh_token(
     db: AsyncSession,

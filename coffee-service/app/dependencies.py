@@ -38,6 +38,7 @@ _CREDENTIALS_EXCEPTION = HTTPException(
 @dataclass
 class CurrentUser:
     """Identity extracted from a validated JWT — no DB lookup required."""
+
     id: uuid.UUID
     role: str
 
@@ -72,11 +73,15 @@ def require_role(*roles: str):
         async def create_coffee(_: CurrentUser = Depends(require_role("ROASTER", "ADMIN"))):
             ...
     """
-    async def _check(current_user: CurrentUser = Depends(get_current_user)) -> CurrentUser:
+
+    async def _check(
+        current_user: CurrentUser = Depends(get_current_user),
+    ) -> CurrentUser:
         if current_user.role not in roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Insufficient permissions",
             )
         return current_user
+
     return _check

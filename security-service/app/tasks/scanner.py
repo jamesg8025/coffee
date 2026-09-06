@@ -89,8 +89,7 @@ def run_dependency_scan(self) -> dict:
         # pip-audit doesn't assign severity levels itself, so we use
         # the presence of a fix version as a proxy for actionability.
         has_fix = any(
-            any(v.get("fix_versions") for v in d["vulns"])
-            for d in vulnerable
+            any(v.get("fix_versions") for v in d["vulns"]) for d in vulnerable
         )
         severity = "HIGH" if has_fix else "MEDIUM"
 

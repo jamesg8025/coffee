@@ -30,7 +30,9 @@ async def list_my_tasting_notes(
     return await crud.tasting_notes.get_user_tasting_notes(db, current_user.id)
 
 
-@router.post("", response_model=TastingNoteResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "", response_model=TastingNoteResponse, status_code=status.HTTP_201_CREATED
+)
 async def create_tasting_note(
     data: TastingNoteCreate,
     current_user: CurrentUser = Depends(get_current_user),
@@ -38,7 +40,9 @@ async def create_tasting_note(
 ):
     coffee = await crud.coffees.get_coffee(db, data.coffee_id)
     if not coffee:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Coffee not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Coffee not found"
+        )
     return await crud.tasting_notes.create_tasting_note(db, data, current_user.id)
 
 
@@ -60,7 +64,9 @@ async def get_tasting_note(
 ):
     note = await crud.tasting_notes.get_tasting_note(db, note_id, current_user.id)
     if not note:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tasting note not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Tasting note not found"
+        )
     return note
 
 
@@ -73,9 +79,13 @@ async def update_tasting_note(
 ):
     note = await crud.tasting_notes.get_tasting_note(db, note_id, current_user.id)
     if not note:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tasting note not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Tasting note not found"
+        )
     if note.user_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions"
+        )
     return await crud.tasting_notes.update_tasting_note(db, note, data)
 
 
@@ -87,7 +97,11 @@ async def delete_tasting_note(
 ):
     note = await crud.tasting_notes.get_tasting_note(db, note_id, current_user.id)
     if not note:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tasting note not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Tasting note not found"
+        )
     if note.user_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions"
+        )
     await crud.tasting_notes.delete_tasting_note(db, note)

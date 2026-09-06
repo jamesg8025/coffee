@@ -23,7 +23,9 @@ async def list_collections(
     current_user: CurrentUser = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    return await crud.collections.get_user_collections(db, current_user.id, status=status)
+    return await crud.collections.get_user_collections(
+        db, current_user.id, status=status
+    )
 
 
 @router.post("", response_model=CollectionResponse, status_code=status.HTTP_201_CREATED)
@@ -34,7 +36,9 @@ async def create_collection(
 ):
     coffee = await crud.coffees.get_coffee(db, data.coffee_id)
     if not coffee:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Coffee not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Coffee not found"
+        )
     return await crud.collections.create_collection(db, data, current_user.id)
 
 
@@ -46,7 +50,9 @@ async def get_collection(
 ):
     col = await crud.collections.get_collection(db, collection_id, current_user.id)
     if not col:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Collection not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Collection not found"
+        )
     return col
 
 
@@ -59,7 +65,9 @@ async def update_collection(
 ):
     col = await crud.collections.get_collection(db, collection_id, current_user.id)
     if not col:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Collection not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Collection not found"
+        )
     return await crud.collections.update_collection(db, col, data)
 
 
@@ -71,5 +79,7 @@ async def delete_collection(
 ):
     col = await crud.collections.get_collection(db, collection_id, current_user.id)
     if not col:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Collection not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Collection not found"
+        )
     await crud.collections.delete_collection(db, col)

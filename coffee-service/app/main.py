@@ -37,5 +37,9 @@ async def health():
 
 app.include_router(coffees.router, prefix="/coffees", tags=["coffees"])
 app.include_router(collections.router, prefix="/collections", tags=["collections"])
-app.include_router(tasting_notes.router, prefix="/tasting-notes", tags=["tasting-notes"])
-app.include_router(recommendations.router, prefix="/recommendations", tags=["recommendations"])
+app.include_router(
+    tasting_notes.router, prefix="/tasting-notes", tags=["tasting-notes"]
+)
+app.include_router(
+    recommendations.router, prefix="/recommendations", tags=["recommendations"]
+)

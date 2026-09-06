@@ -2,7 +2,17 @@ import enum
 import uuid
 from datetime import date, datetime, timezone
 
-from sqlalchemy import Boolean, Date, DateTime, Enum, ForeignKey, Numeric, String, Text, text
+from sqlalchemy import (
+    Boolean,
+    Date,
+    DateTime,
+    Enum,
+    ForeignKey,
+    Numeric,
+    String,
+    Text,
+    text,
+)
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -90,8 +100,12 @@ class Collection(Base):
     )
     purchase_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     status: Mapped[CollectionStatus] = mapped_column(
-        Enum(CollectionStatus, name="collectionstatus", create_type=False,
-             values_callable=lambda x: [e.value for e in x]),
+        Enum(
+            CollectionStatus,
+            name="collectionstatus",
+            create_type=False,
+            values_callable=lambda x: [e.value for e in x],
+        ),
         nullable=False,
         default=CollectionStatus.ACTIVE,
         server_default="active",

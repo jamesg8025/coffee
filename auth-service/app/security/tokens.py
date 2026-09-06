@@ -40,6 +40,7 @@ settings = get_settings()
 # Access tokens (JWT)
 # ---------------------------------------------------------------------------
 
+
 def create_access_token(user_id: str, role: str) -> str:
     now = datetime.now(timezone.utc)
     payload = {
@@ -83,6 +84,7 @@ def decode_token(token: str) -> dict:
 # ---------------------------------------------------------------------------
 # Refresh tokens
 # ---------------------------------------------------------------------------
+
 
 def generate_refresh_token() -> tuple[str, str]:
     """

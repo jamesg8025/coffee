@@ -17,6 +17,7 @@ from app.models.coffee import CollectionStatus, RoastLevel
 # Coffee catalog
 # ---------------------------------------------------------------------------
 
+
 class CoffeeCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
     origin_country: str | None = None
@@ -52,6 +53,7 @@ class CoffeeResponse(BaseModel):
 # Personal collections
 # ---------------------------------------------------------------------------
 
+
 class CollectionCreate(BaseModel):
     coffee_id: uuid.UUID
     quantity: float | None = None
@@ -82,10 +84,12 @@ class CollectionResponse(BaseModel):
 # Tasting notes
 # ---------------------------------------------------------------------------
 
+
 class BrewParams(BaseModel):
     """Structured brew parameters — every field is optional."""
-    method: str | None = None          # pour_over, espresso, french_press, aeropress …
-    grind_size: str | None = None      # fine, medium-fine, medium, coarse
+
+    method: str | None = None  # pour_over, espresso, french_press, aeropress …
+    grind_size: str | None = None  # fine, medium-fine, medium, coarse
     water_temp_celsius: float | None = None
     brew_time_seconds: int | None = None
     dose_grams: float | None = None
@@ -94,6 +98,7 @@ class BrewParams(BaseModel):
 
 class FlavorRatings(BaseModel):
     """Numeric ratings 1–10 for each flavor dimension."""
+
     acidity: int | None = Field(None, ge=1, le=10)
     sweetness: int | None = Field(None, ge=1, le=10)
     body: int | None = Field(None, ge=1, le=10)
@@ -134,6 +139,7 @@ class TastingNoteResponse(BaseModel):
 # AI recommendations
 # ---------------------------------------------------------------------------
 
+
 class RecommendationRequest(BaseModel):
     """
     Optional explicit preferences.  All fields are lists of strings — NOT
@@ -141,6 +147,7 @@ class RecommendationRequest(BaseModel):
     directly into the system prompt; it goes into structured JSON in the
     user message.
     """
+
     preferred_roast_levels: list[str] | None = None
     preferred_origins: list[str] | None = None
     flavor_preferences: list[str] | None = None

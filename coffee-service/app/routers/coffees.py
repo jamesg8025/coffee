@@ -49,7 +49,9 @@ async def get_coffee(
 ):
     coffee = await crud.coffees.get_coffee(db, coffee_id)
     if not coffee:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Coffee not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Coffee not found"
+        )
     return coffee
 
 
@@ -71,12 +73,16 @@ async def update_coffee(
 ):
     coffee = await crud.coffees.get_coffee(db, coffee_id)
     if not coffee:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Coffee not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Coffee not found"
+        )
 
     is_owner = coffee.roaster_id == current_user.id
     is_admin = current_user.role == "ADMIN"
     if not (is_owner or is_admin):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions"
+        )
 
     return await crud.coffees.update_coffee(db, coffee, data)
 
@@ -89,11 +95,15 @@ async def delete_coffee(
 ):
     coffee = await crud.coffees.get_coffee(db, coffee_id)
     if not coffee:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Coffee not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Coffee not found"
+        )
 
     is_owner = coffee.roaster_id == current_user.id
     is_admin = current_user.role == "ADMIN"
     if not (is_owner or is_admin):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions"
+        )
 
     await crud.coffees.delete_coffee(db, coffee)

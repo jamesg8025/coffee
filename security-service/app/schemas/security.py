@@ -10,6 +10,7 @@ from pydantic import BaseModel, ConfigDict
 # Scan log
 # ---------------------------------------------------------------------------
 
+
 class ScanLogResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -31,8 +32,10 @@ class ScanTriggerResponse(BaseModel):
 # Blocked IPs
 # ---------------------------------------------------------------------------
 
+
 class BlockedIPEntry(BaseModel):
     """A currently-blocked IP as seen in Redis."""
+
     ip: str
     ttl_seconds: int
 

@@ -21,6 +21,7 @@ from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
 # Registration & user representation
 # ---------------------------------------------------------------------------
 
+
 class UserCreate(BaseModel):
     email: EmailStr
     password: str
@@ -50,7 +51,10 @@ class UserCreate(BaseModel):
 
 class UserResponse(BaseModel):
     """What we're willing to tell the client about a user. Never includes password_hash."""
-    model_config = ConfigDict(from_attributes=True)  # allows building from SQLAlchemy ORM objects
+
+    model_config = ConfigDict(
+        from_attributes=True
+    )  # allows building from SQLAlchemy ORM objects
 
     id: uuid.UUID
     email: str
@@ -64,6 +68,7 @@ class UserResponse(BaseModel):
 # Login and token flows
 # ---------------------------------------------------------------------------
 
+
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
@@ -71,6 +76,7 @@ class LoginRequest(BaseModel):
 
 class TokenResponse(BaseModel):
     """Returned on successful login or token refresh."""
+
     access_token: str
     refresh_token: str
     token_type: str = "bearer"
@@ -82,6 +88,7 @@ class MFARequiredResponse(BaseModel):
     The mfa_token is a short-lived (5 min), purpose-scoped JWT.
     It proves the user passed the password check without granting API access.
     """
+
     mfa_required: bool = True
     mfa_token: str
 
@@ -98,22 +105,26 @@ class LogoutRequest(BaseModel):
 # MFA enrollment and login
 # ---------------------------------------------------------------------------
 
+
 class MFAEnrollResponse(BaseModel):
     """
     secret: the raw base32 TOTP secret — show this once, it cannot be recovered.
     qr_uri: the otpauth:// URI that authenticator apps (Google Authenticator,
             Authy, 1Password) scan as a QR code.
     """
+
     secret: str
     qr_uri: str
 
 
 class MFAConfirmRequest(BaseModel):
     """The user's first TOTP code, proving they scanned the QR code correctly."""
+
     totp_code: str
 
 
 class MFALoginRequest(BaseModel):
     """Second step of login when MFA is enabled."""
+
     mfa_token: str  # short-lived token from the /login response
     totp_code: str

@@ -23,9 +23,18 @@ from app.crud.users import get_user_by_id, issue_refresh_token
 from app.database import get_db
 from app.dependencies import get_current_user
 from app.models.user import User
-from app.schemas.auth import MFAConfirmRequest, MFAEnrollResponse, MFALoginRequest, TokenResponse
+from app.schemas.auth import (
+    MFAConfirmRequest,
+    MFAEnrollResponse,
+    MFALoginRequest,
+    TokenResponse,
+)
 from app.security.tokens import create_access_token, decode_token
-from app.security.totp import generate_totp_secret, get_totp_provisioning_uri, verify_totp_code
+from app.security.totp import (
+    generate_totp_secret,
+    get_totp_provisioning_uri,
+    verify_totp_code,
+)
 
 settings = get_settings()
 router = APIRouter()
@@ -120,5 +129,7 @@ async def mfa_login(data: MFALoginRequest, db: AsyncSession = Depends(get_db)):
         raise _invalid
 
     access_token = create_access_token(str(user.id), user.role.value)
-    refresh_token = await issue_refresh_token(db, user.id, settings.refresh_token_expire_days)
+    refresh_token = await issue_refresh_token(
+        db, user.id, settings.refresh_token_expire_days
+    )
     return TokenResponse(access_token=access_token, refresh_token=refresh_token)

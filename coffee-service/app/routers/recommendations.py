@@ -20,7 +20,11 @@ from app import crud
 from app.config import get_settings
 from app.database import get_db
 from app.dependencies import CurrentUser, get_current_user
-from app.schemas.coffee import RecommendationRequest, RecommendationResponse, RecommendedCoffee
+from app.schemas.coffee import (
+    RecommendationRequest,
+    RecommendationResponse,
+    RecommendedCoffee,
+)
 
 router = APIRouter()
 
@@ -65,7 +69,9 @@ async def get_recommendations(
         )
 
     # Pull the user's last 20 tasting notes for context
-    notes = await crud.tasting_notes.get_user_tasting_notes(db, current_user.id, limit=20)
+    notes = await crud.tasting_notes.get_user_tasting_notes(
+        db, current_user.id, limit=20
+    )
     # Pull up to 50 active coffees for the model to choose from
     coffees = await crud.coffees.list_coffees(db, limit=50)
 

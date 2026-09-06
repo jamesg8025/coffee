@@ -24,7 +24,9 @@ class User(Base):
         default=uuid.uuid4,
         server_default=text("gen_random_uuid()"),
     )
-    email: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
+    email: Mapped[str] = mapped_column(
+        String(255), nullable=False, unique=True, index=True
+    )
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     role: Mapped[UserRole] = mapped_column(
         Enum(UserRole, name="userrole"),
@@ -70,7 +72,9 @@ class RefreshToken(Base):
         index=True,
     )
     token_hash: Mapped[str] = mapped_column(String(255), nullable=False)
-    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
     revoked: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False, server_default="false"
     )

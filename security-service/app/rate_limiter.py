@@ -55,10 +55,10 @@ async def record_failure(
     window_start = now - window_seconds
 
     async with redis.pipeline(transaction=True) as pipe:
-        pipe.zremrangebyscore(key, 0, window_start)   # drop stale entries
-        pipe.zadd(key, {str(now): now})               # record this failure
-        pipe.zcard(key)                               # count in window
-        pipe.expire(key, window_seconds)              # auto-clean the key
+        pipe.zremrangebyscore(key, 0, window_start)  # drop stale entries
+        pipe.zadd(key, {str(now): now})  # record this failure
+        pipe.zcard(key)  # count in window
+        pipe.expire(key, window_seconds)  # auto-clean the key
         results = await pipe.execute()
 
     count = results[2]

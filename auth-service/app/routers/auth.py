@@ -30,7 +30,9 @@ settings = get_settings()
 router = APIRouter()
 
 
-@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED
+)
 async def register(data: UserCreate, db: AsyncSession = Depends(get_db)):
     """
     Create a new account. Password is validated by the UserCreate schema
@@ -83,7 +85,9 @@ async def login(data: LoginRequest, db: AsyncSession = Depends(get_db)):
         return MFARequiredResponse(mfa_token=create_mfa_token(str(user.id)))
 
     access_token = create_access_token(str(user.id), user.role.value)
-    refresh_token = await issue_refresh_token(db, user.id, settings.refresh_token_expire_days)
+    refresh_token = await issue_refresh_token(
+        db, user.id, settings.refresh_token_expire_days
+    )
     return TokenResponse(access_token=access_token, refresh_token=refresh_token)
 
 
@@ -105,7 +109,9 @@ async def refresh_tokens(data: RefreshRequest, db: AsyncSession = Depends(get_db
         )
 
     access_token = create_access_token(str(user.id), user.role.value)
-    new_refresh_token = await issue_refresh_token(db, user.id, settings.refresh_token_expire_days)
+    new_refresh_token = await issue_refresh_token(
+        db, user.id, settings.refresh_token_expire_days
+    )
     return TokenResponse(access_token=access_token, refresh_token=new_refresh_token)
 
 

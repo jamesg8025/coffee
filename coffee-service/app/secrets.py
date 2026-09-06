@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 @lru_cache(maxsize=1)
 def _fetch_from_secrets_manager(secret_name: str, region: str) -> dict:
     import boto3
+
     client = boto3.client("secretsmanager", region_name=region)
     response = client.get_secret_value(SecretId=secret_name)
     return json.loads(response["SecretString"])

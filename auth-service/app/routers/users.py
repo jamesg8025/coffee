@@ -28,7 +28,7 @@ async def admin_only(_: User = Depends(require_role(UserRole.ADMIN))):
 
 @router.get("/roaster-or-admin")
 async def roaster_or_admin(
-    _: User = Depends(require_role(UserRole.ROASTER, UserRole.ADMIN))
+    _: User = Depends(require_role(UserRole.ROASTER, UserRole.ADMIN)),
 ):
     """ROASTER or ADMIN endpoint — verifies multi-role RBAC."""
     return {"message": "Roaster or Admin access granted"}

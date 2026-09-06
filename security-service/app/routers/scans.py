@@ -40,7 +40,9 @@ async def get_scan(
 ):
     log = await get_scan_log(db, scan_id)
     if not log:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Scan not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Scan not found"
+        )
     return log
 
 
@@ -53,11 +55,15 @@ async def resolve_scan(
     """Mark a scan result as resolved (acknowledged / patched)."""
     log = await get_scan_log(db, scan_id)
     if not log:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Scan not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Scan not found"
+        )
     return await mark_resolved(db, log)
 
 
-@router.post("/trigger", response_model=ScanTriggerResponse, status_code=status.HTTP_202_ACCEPTED)
+@router.post(
+    "/trigger", response_model=ScanTriggerResponse, status_code=status.HTTP_202_ACCEPTED
+)
 async def trigger_scan(
     _: CurrentUser = Depends(require_role("ADMIN")),
 ):

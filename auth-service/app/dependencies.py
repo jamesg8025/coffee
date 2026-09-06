@@ -75,6 +75,7 @@ def require_role(*roles: UserRole):
     the code and enforced automatically. There's no way a CONSUMER can reach
     a ROASTER endpoint without an explicit role grant."
     """
+
     async def _check_role(current_user: User = Depends(get_current_user)) -> User:
         if current_user.role not in roles:
             raise HTTPException(
@@ -82,4 +83,5 @@ def require_role(*roles: UserRole):
                 detail="Insufficient permissions",
             )
         return current_user
+
     return _check_role
