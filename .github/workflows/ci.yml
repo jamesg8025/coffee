@@ -97,10 +97,6 @@ jobs:
     name: "Gate 3 · Dependency CVE Scan (${{ matrix.service }})"
     runs-on: ubuntu-latest
     needs: lint
-    continue-on-error: true   # advisory: scan runs and reports, does not block pipeline.
-    # In production, specific CVE IDs would be triaged and either patched or
-    # explicitly acknowledged with --ignore-vuln. Transitive deps (e.g. ecdsa)
-    # often have no available fix and would be documented as accepted risk.
     strategy:
       matrix:
         service: [auth-service, coffee-service, security-service]
@@ -116,11 +112,15 @@ jobs:
         run: pip install pip-audit
 
       - name: Run pip-audit
+        # Advisory gate: scan always completes and the report is uploaded as an
+        # artifact regardless of findings. In a production system, specific CVE IDs
+        # would be triaged — fixable ones patched, unfixable transitive deps (e.g.
+        # ecdsa Minerva attack) explicitly acknowledged with --ignore-vuln.
         run: |
           pip-audit \
             --requirement ${{ matrix.service }}/requirements.txt \
             --format json \
-            --output dep-scan-${{ matrix.service }}.json
+            --output dep-scan-${{ matrix.service }}.json || true
 
       - name: Upload scan results
         if: always()
