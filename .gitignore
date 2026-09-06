@@ -3,6 +3,10 @@
 *.pem
 *.key
 
+# ---- Local planning docs (not for GitHub) ----
+PLANNING.md
+TALKING_POINTS.md
+
 # ---- Celery runtime state ----
 celerybeat-schedule
 celerybeat.pid
