@@ -14,6 +14,7 @@ Architecture:
 """
 
 import os
+from urllib.parse import urlparse
 
 import asyncpg
 import pytest_asyncio
@@ -32,6 +33,15 @@ TEST_DATABASE_URL = os.getenv(
     "postgresql+asyncpg://postgres:postgres@postgres:5432/coffee_test",
 )
 
+# Parse connection params from TEST_DATABASE_URL so that CI (which exposes
+# postgres at localhost) and Docker Compose (which uses the service name
+# "postgres") both work without hardcoding either hostname.
+_parsed = urlparse(TEST_DATABASE_URL.replace("+asyncpg", ""))
+_DB_HOST = _parsed.hostname or "postgres"
+_DB_PORT = _parsed.port or 5432
+_DB_USER = _parsed.username or "postgres"
+_DB_PASSWORD = _parsed.password or "postgres"
+
 _test_engine = create_async_engine(TEST_DATABASE_URL, echo=False, poolclass=NullPool)
 _TestSession = async_sessionmaker(_test_engine, class_=AsyncSession, expire_on_commit=False)
 
@@ -45,8 +55,10 @@ async def setup_test_db():
     """Create coffee_test database and all tables before the session; drop after."""
     # Create the database using a raw asyncpg connection (SQLAlchemy can't CREATE DATABASE)
     conn = await asyncpg.connect(
-        host="postgres", port=5432,
-        user="postgres", password="postgres",
+        host=_DB_HOST,
+        port=_DB_PORT,
+        user=_DB_USER,
+        password=_DB_PASSWORD,
         database="postgres",
     )
     try:

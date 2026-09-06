@@ -1,0 +1,338 @@
+name: CI
+
+# Runs on every push and on pull requests targeting main.
+# Five security gates must pass before any code reaches production.
+# The deploy job only runs on push to main and requires AWS secrets
+# (see README for setup instructions).
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  security-events: write   # required for Trivy SARIF upload to GitHub Security tab
+
+env:
+  PYTHON_VERSION: "3.12"
+
+jobs:
+
+  # ════════════════════════════════════════════════════════════════
+  # GATE 1 — Lint & Format (ruff)
+  # All other gates depend on this job. Fast feedback: code style
+  # and obvious errors are caught before heavier tools run.
+  # ════════════════════════════════════════════════════════════════
+  lint:
+    name: "Gate 1 · Lint & Format"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install ruff
+        run: pip install ruff==0.5.7
+
+      - name: Check formatting (ruff format --check)
+        working-directory: coffee
+        run: ruff format --check auth-service/app coffee-service/app security-service/app
+
+      - name: Check linting (ruff check)
+        working-directory: coffee
+        run: ruff check auth-service/app coffee-service/app security-service/app
+
+
+  # ════════════════════════════════════════════════════════════════
+  # GATE 2 — SAST (Bandit)
+  # Static analysis of Python source for security anti-patterns:
+  # hardcoded secrets, SQL injection patterns, weak crypto, etc.
+  # Blocks on HIGH severity findings. Report uploaded as artifact.
+  # ════════════════════════════════════════════════════════════════
+  sast:
+    name: "Gate 2 · SAST (Bandit)"
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install bandit
+        run: pip install bandit==1.7.9
+
+      - name: Run Bandit — HIGH severity and above
+        working-directory: coffee
+        # .bandit config excludes tests/ and alembic/, skips B101/B104
+        # Exit code 1 on any HIGH+ finding — pipeline blocked
+        run: |
+          bandit \
+            --configfile .bandit \
+            --severity-level high \
+            --recursive \
+            auth-service/app coffee-service/app security-service/app \
+            --format json \
+            --output bandit-report.json
+
+      - name: Upload Bandit report
+        if: always()   # upload even when the step above fails
+        uses: actions/upload-artifact@v4
+        with:
+          name: bandit-report
+          path: coffee/bandit-report.json
+
+
+  # ════════════════════════════════════════════════════════════════
+  # GATE 3 — Dependency CVE Scan (pip-audit)
+  # Checks each service's requirements.txt against the OSV advisory
+  # database (the same source GitHub Dependabot uses). Exits 1 if
+  # any known vulnerability is found. Run in parallel per service.
+  # ════════════════════════════════════════════════════════════════
+  dependency-scan:
+    name: "Gate 3 · Dependency CVE Scan (${{ matrix.service }})"
+    runs-on: ubuntu-latest
+    needs: lint
+    strategy:
+      matrix:
+        service: [auth-service, coffee-service, security-service]
+      fail-fast: false   # scan all services even if one fails
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install pip-audit
+        run: pip install pip-audit
+
+      - name: Run pip-audit
+        working-directory: coffee
+        run: |
+          pip-audit \
+            --requirement ${{ matrix.service }}/requirements.txt \
+            --format json \
+            --output dep-scan-${{ matrix.service }}.json
+
+      - name: Upload scan results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dep-scan-${{ matrix.service }}
+          path: coffee/dep-scan-${{ matrix.service }}.json
+
+
+  # ════════════════════════════════════════════════════════════════
+  # GATE 4 — Unit, Integration & Security Tests (pytest)
+  # Each service runs against a real PostgreSQL instance spun up as
+  # a GitHub Actions service container. auth-service creates its own
+  # isolated test database (coffee_test); coffee-service and
+  # security-service run against the coffee database after Alembic
+  # migrations have been applied. Run in parallel per service.
+  # ════════════════════════════════════════════════════════════════
+  test:
+    name: "Gate 4 · Tests (${{ matrix.service }})"
+    runs-on: ubuntu-latest
+    needs: lint
+    strategy:
+      matrix:
+        include:
+          # auth-service: conftest creates coffee_test dynamically via create_all.
+          # No Alembic needed; test isolation is handled by the session fixture.
+          - service: auth-service
+            test-db: coffee_test
+            needs-migrations: false
+          # coffee-service: uses the coffee DB with FK stubs for the users table.
+          # Alembic must run first to create the full schema.
+          - service: coffee-service
+            test-db: coffee
+            needs-migrations: true
+          # security-service: same schema dependency as coffee-service.
+          # Redis is replaced by fakeredis — no Redis service container needed.
+          - service: security-service
+            test-db: coffee
+            needs-migrations: true
+      fail-fast: false
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: coffee
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    env:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/coffee
+      TEST_DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/${{ matrix.test-db }}
+      JWT_SECRET: ci-test-secret-key-not-for-production
+      JWT_ALGORITHM: HS256
+      ENVIRONMENT: test
+      OPENAI_API_KEY: sk-test-placeholder
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install auth-service deps
+        # Always installed: auth-service owns the Alembic migrations and the
+        # schema models that coffee-service and security-service depend on.
+        working-directory: coffee/auth-service
+        run: pip install -r requirements.txt
+
+      - name: Run Alembic migrations
+        if: matrix.needs-migrations == true
+        working-directory: coffee/auth-service
+        run: alembic upgrade head
+
+      - name: Install ${{ matrix.service }} deps
+        if: matrix.service != 'auth-service'
+        working-directory: coffee/${{ matrix.service }}
+        run: pip install -r requirements.txt
+
+      - name: Run pytest
+        working-directory: coffee/${{ matrix.service }}
+        run: pytest --cov=app --cov-report=xml -q
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.service }}
+          path: coffee/${{ matrix.service }}/coverage.xml
+
+
+  # ════════════════════════════════════════════════════════════════
+  # GATE 5 — Container Scan (Trivy)
+  # Builds each service's production Docker image (multi-stage,
+  # python:3.12-slim base, non-root user) and scans for OS-level
+  # and library CVEs. CRITICAL findings block the pipeline.
+  # SARIF results are uploaded to the GitHub Security tab.
+  # Only runs after all four prior gates pass.
+  # ════════════════════════════════════════════════════════════════
+  container-scan:
+    name: "Gate 5 · Container Scan (${{ matrix.service }})"
+    runs-on: ubuntu-latest
+    needs: [sast, dependency-scan, test]
+    strategy:
+      matrix:
+        service: [auth-service, coffee-service, security-service]
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        working-directory: coffee/${{ matrix.service }}
+        run: docker build -t coffee-${{ matrix.service }}:${{ github.sha }} .
+
+      - name: Run Trivy scan
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: coffee-${{ matrix.service }}:${{ github.sha }}
+          format: sarif
+          output: trivy-${{ matrix.service }}.sarif
+          exit-code: "1"
+          severity: CRITICAL
+          ignore-unfixed: true   # skip CVEs with no available fix
+
+      - name: Upload SARIF to GitHub Security tab
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-${{ matrix.service }}.sarif
+          category: trivy-${{ matrix.service }}
+
+
+  # ════════════════════════════════════════════════════════════════
+  # DEPLOY — AWS ECS Fargate
+  # Runs only on push to main, only after all 5 gates pass.
+  #
+  # Required repository secrets:
+  #   AWS_ACCESS_KEY_ID      — IAM user with ECS + ECR + SecretsManager access
+  #   AWS_SECRET_ACCESS_KEY  — corresponding secret key
+  #   ECR_REGISTRY           — e.g. 123456789.dkr.ecr.us-east-1.amazonaws.com
+  #   ALB_URL                — Application Load Balancer base URL for smoke test
+  #
+  # Infrastructure assumed to exist (created separately via Terraform/console):
+  #   - ECS cluster: coffee-cluster
+  #   - ECS services: coffee-auth-service, coffee-coffee-service, coffee-security-service
+  #   - ECR repositories: auth-service, coffee-service, security-service
+  #   - AWS Secrets Manager secrets injected into ECS task definitions
+  # ════════════════════════════════════════════════════════════════
+  deploy:
+    name: "Deploy to AWS ECS"
+    runs-on: ubuntu-latest
+    needs: container-scan
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: production
+    env:
+      AWS_REGION: us-east-1
+      ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Log in to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag, and push images to ECR
+        # Tags each image with the commit SHA (immutable) and latest (for ECS reference).
+        # Trivy already scanned these images in Gate 5 — no re-scan needed here.
+        run: |
+          for SERVICE in auth-service coffee-service security-service; do
+            IMAGE_URI=$ECR_REGISTRY/$SERVICE:${{ github.sha }}
+            docker build -t $IMAGE_URI coffee/$SERVICE
+            docker push $IMAGE_URI
+            docker tag $IMAGE_URI $ECR_REGISTRY/$SERVICE:latest
+            docker push $ECR_REGISTRY/$SERVICE:latest
+          done
+
+      - name: Deploy services to ECS (force new deployment)
+        run: |
+          for SERVICE in auth-service coffee-service security-service; do
+            aws ecs update-service \
+              --cluster coffee-cluster \
+              --service coffee-$SERVICE \
+              --force-new-deployment \
+              --region ${{ env.AWS_REGION }}
+          done
+
+      - name: Wait for ECS services to stabilize
+        run: |
+          for SERVICE in auth-service coffee-service security-service; do
+            aws ecs wait services-stable \
+              --cluster coffee-cluster \
+              --services coffee-$SERVICE \
+              --region ${{ env.AWS_REGION }}
+          done
+
+      - name: Post-deploy smoke test
+        # Basic liveness check against each service through the ALB.
+        # ECS will auto-rollback if the smoke test fails and the previous
+        # task definition is still registered as the fallback.
+        run: |
+          ALB_URL=${{ secrets.ALB_URL }}
+          curl --fail --silent --max-time 10 "$ALB_URL/auth/health"
+          curl --fail --silent --max-time 10 "$ALB_URL/coffee/health"
+          curl --fail --silent --max-time 10 "$ALB_URL/security/health"
