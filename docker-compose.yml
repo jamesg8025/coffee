@@ -93,6 +93,19 @@ services:
       redis:
         condition: service_healthy
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    environment:
+      - NEXT_PUBLIC_AUTH_URL=http://localhost:8001
+      - NEXT_PUBLIC_COFFEE_URL=http://localhost:8002
+    ports:
+      - "3000:3000"
+    depends_on:
+      - auth-service
+      - coffee-service
+
   celery-beat:
     build:
       context: ./security-service
