@@ -39,11 +39,9 @@ jobs:
         run: pip install ruff==0.5.7
 
       - name: Check formatting (ruff format --check)
-        working-directory: coffee
         run: ruff format --check auth-service/app coffee-service/app security-service/app
 
       - name: Check linting (ruff check)
-        working-directory: coffee
         run: ruff check auth-service/app coffee-service/app security-service/app
 
 
@@ -68,7 +66,6 @@ jobs:
         run: pip install bandit==1.7.9
 
       - name: Run Bandit — HIGH severity and above
-        working-directory: coffee
         # .bandit config excludes tests/ and alembic/, skips B101/B104
         # Exit code 1 on any HIGH+ finding — pipeline blocked
         run: |
@@ -85,7 +82,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: bandit-report
-          path: coffee/bandit-report.json
+          path: bandit-report.json
 
 
   # ════════════════════════════════════════════════════════════════
@@ -113,7 +110,6 @@ jobs:
         run: pip install pip-audit
 
       - name: Run pip-audit
-        working-directory: coffee
         run: |
           pip-audit \
             --requirement ${{ matrix.service }}/requirements.txt \
@@ -125,7 +121,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: dep-scan-${{ matrix.service }}
-          path: coffee/dep-scan-${{ matrix.service }}.json
+          path: dep-scan-${{ matrix.service }}.json
 
 
   # ════════════════════════════════════════════════════════════════
@@ -191,21 +187,21 @@ jobs:
       - name: Install auth-service deps
         # Always installed: auth-service owns the Alembic migrations and the
         # schema models that coffee-service and security-service depend on.
-        working-directory: coffee/auth-service
+        working-directory: auth-service
         run: pip install -r requirements.txt
 
       - name: Run Alembic migrations
         if: matrix.needs-migrations == true
-        working-directory: coffee/auth-service
+        working-directory: auth-service
         run: alembic upgrade head
 
       - name: Install ${{ matrix.service }} deps
         if: matrix.service != 'auth-service'
-        working-directory: coffee/${{ matrix.service }}
+        working-directory: ${{ matrix.service }}
         run: pip install -r requirements.txt
 
       - name: Run pytest
-        working-directory: coffee/${{ matrix.service }}
+        working-directory: ${{ matrix.service }}
         run: pytest --cov=app --cov-report=xml -q
 
       - name: Upload coverage report
@@ -213,7 +209,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-${{ matrix.service }}
-          path: coffee/${{ matrix.service }}/coverage.xml
+          path: ${{ matrix.service }}/coverage.xml
 
 
   # ════════════════════════════════════════════════════════════════
@@ -236,7 +232,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Build Docker image
-        working-directory: coffee/${{ matrix.service }}
+        working-directory: ${{ matrix.service }}
         run: docker build -t coffee-${{ matrix.service }}:${{ github.sha }} .
 
       - name: Run Trivy scan
@@ -302,7 +298,7 @@ jobs:
         run: |
           for SERVICE in auth-service coffee-service security-service; do
             IMAGE_URI=$ECR_REGISTRY/$SERVICE:${{ github.sha }}
-            docker build -t $IMAGE_URI coffee/$SERVICE
+            docker build -t $IMAGE_URI $SERVICE
             docker push $IMAGE_URI
             docker tag $IMAGE_URI $ECR_REGISTRY/$SERVICE:latest
             docker push $ECR_REGISTRY/$SERVICE:latest
