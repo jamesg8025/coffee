@@ -20,7 +20,7 @@ import subprocess
 from datetime import datetime, timezone
 
 from sqlalchemy import create_engine
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import sessionmaker
 
 from app.celery_app import celery_app
 from app.config import get_settings

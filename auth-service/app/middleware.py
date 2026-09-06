@@ -19,7 +19,6 @@ Interview talking point:
 
 import logging
 
-from redis.asyncio import Redis
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response

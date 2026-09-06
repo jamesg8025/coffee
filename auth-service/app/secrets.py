@@ -34,7 +34,6 @@ def load_secrets() -> dict:
 
     try:
         import boto3
-        from botocore.exceptions import ClientError
 
         client = boto3.client("secretsmanager", region_name=settings.aws_region)
         response = client.get_secret_value(SecretId=settings.secret_name)

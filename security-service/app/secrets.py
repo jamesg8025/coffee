@@ -6,7 +6,6 @@ In prod: fetches from AWS Secrets Manager and overrides the Settings cache.
 
 import json
 import logging
-from functools import lru_cache
 
 from app.config import get_settings
 
