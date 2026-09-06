@@ -83,8 +83,8 @@ The auth-service entrypoint automatically runs `alembic upgrade head` on startup
 
 - [x] SRD v3.0 — architecture and requirements defined
 - [x] Phase 1 — monorepo structure, Docker Compose, Alembic setup
-- [ ] Phase 2 — auth-service with JWT, refresh token rotation, TOTP MFA
-- [ ] Phase 3 — coffee-service with catalog, collections, AI recommendations
-- [ ] Phase 4 — security-service with rate limiting and automated scanning
-- [ ] Phase 5 — CI/CD pipeline with all security gates, ECS deployment
+- [x] Phase 2 — auth-service with JWT, refresh token rotation, TOTP MFA
+- [x] Phase 3 — coffee-service with catalog, collections, AI recommendations
+- [x] Phase 4 — security-service with rate limiting and automated scanning
+- [x] Phase 5 — CI/CD pipeline with all security gates, ECS deployment
 - [ ] Phase 6 — Next.js frontend
