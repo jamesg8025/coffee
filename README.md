@@ -2,7 +2,7 @@
 
 A Python-first, security-conscious web application for coffee enthusiasts to manage collections, document tasting experiences, and receive AI-powered recommendations. Built with production-grade engineering practices: FastAPI microservices, OAuth2 + TOTP MFA, automated security scanning baked into CI/CD, and secrets management via AWS Secrets Manager.
 
-**Status: In Progress — Phase 1 of 6 (Foundation)**
+**Status: In Progress — Phase 6 of 6 (Frontend Development)**
 
 ---
 
