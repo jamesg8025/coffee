@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { useAuth } from '@/contexts/auth'
 import { LogOut } from 'lucide-react'
 
@@ -12,18 +13,38 @@ const roleBadgeClasses: Record<string, string> = {
 
 export default function Navbar() {
   const { user, isLoading, logout } = useAuth()
+  const pathname = usePathname()
+
+  const navLink = (href: string, label: string) => {
+    const active = pathname === href || pathname.startsWith(`${href}/`)
+    return (
+      <Link
+        href={href}
+        className={`text-sm transition-colors ${
+          active
+            ? 'text-white font-medium underline underline-offset-4 decoration-amber-400'
+            : 'text-amber-200 hover:text-white'
+        }`}
+      >
+        {label}
+      </Link>
+    )
+  }
 
   return (
     <nav className="sticky top-0 z-50 bg-amber-950 shadow-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14">
-          <Link
-            href="/catalog"
-            className="flex items-center gap-2 text-white font-semibold text-lg tracking-tight hover:text-amber-200 transition-colors"
-          >
-            <span>☕</span>
-            <span>Coffee Connoisseur</span>
-          </Link>
+          <div className="flex items-center gap-6">
+            <Link
+              href="/catalog"
+              className="flex items-center gap-2 text-white font-semibold text-lg tracking-tight hover:text-amber-200 transition-colors"
+            >
+              <span>☕</span>
+              <span>Coffee Connoisseur</span>
+            </Link>
+            {navLink('/catalog', 'Catalog')}
+          </div>
 
           <div className="flex items-center gap-4">
             {isLoading ? null : user ? (
