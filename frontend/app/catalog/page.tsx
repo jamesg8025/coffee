@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useMemo, useCallback } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import { Search } from 'lucide-react'
 import { coffeeFetch } from '@/lib/api'
@@ -40,8 +41,31 @@ function CoffeeCardSkeleton() {
 }
 
 export default function CatalogPage() {
-  const [search, setSearch] = useState('')
-  const [roastFilter, setRoastFilter] = useState<RoastFilter>('all')
+  const router = useRouter()
+  const searchParams = useSearchParams()
+
+  const search = searchParams.get('q') ?? ''
+  const roastFilter = (searchParams.get('roast') ?? 'all') as RoastFilter
+
+  const setSearch = useCallback(
+    (value: string) => {
+      const params = new URLSearchParams(searchParams.toString())
+      if (value) params.set('q', value)
+      else params.delete('q')
+      router.replace(`/catalog?${params.toString()}`, { scroll: false })
+    },
+    [router, searchParams]
+  )
+
+  const setRoastFilter = useCallback(
+    (value: RoastFilter) => {
+      const params = new URLSearchParams(searchParams.toString())
+      if (value !== 'all') params.set('roast', value)
+      else params.delete('roast')
+      router.replace(`/catalog?${params.toString()}`, { scroll: false })
+    },
+    [router, searchParams]
+  )
 
   const { data: coffees, isLoading, isError, error } = useQuery({
     queryKey: ['coffees'],
