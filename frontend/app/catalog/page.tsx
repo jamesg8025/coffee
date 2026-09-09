@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useCallback } from 'react'
+import { useMemo, useCallback, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import { Search } from 'lucide-react'
@@ -67,6 +67,22 @@ export default function CatalogPage() {
     [router, searchParams]
   )
 
+  const searchRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      const tag = (e.target as HTMLElement).tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return
+
+      if (e.key === '/') {
+        e.preventDefault()
+        searchRef.current?.focus()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
   const { data: coffees, isLoading, isError, error } = useQuery({
     queryKey: ['coffees'],
     queryFn: fetchCoffees,
@@ -105,10 +121,12 @@ export default function CatalogPage() {
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
           <input
+            ref={searchRef}
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name or origin…"
+            onKeyDown={(e) => { if (e.key === 'Escape') { setSearch(''); searchRef.current?.blur() } }}
+            placeholder="Search by name or origin… (press / to focus)"
             className="w-full pl-9 pr-4 py-2 rounded-lg border border-stone-300 text-stone-900 text-sm placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition bg-white"
           />
         </div>
