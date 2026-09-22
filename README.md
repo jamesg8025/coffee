@@ -87,4 +87,4 @@ The auth-service entrypoint automatically runs `alembic upgrade head` on startup
 - [x] Phase 3 — coffee-service with catalog, collections, AI recommendations
 - [x] Phase 4 — security-service with rate limiting and automated scanning
 - [x] Phase 5 — CI/CD pipeline with all security gates, ECS deployment
-- [ ] Phase 6 — Next.js frontend
+- [ ] Phase 6 — Next.js frontend, AWS
